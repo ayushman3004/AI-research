@@ -1,17 +1,22 @@
-import { ChatAnthropic } from '@langchain/anthropic';
+import { ChatGroq } from '@langchain/groq';
 import { AgentState, FindingsSchema, IFindings } from '../state';
-import { ANALYZE_SYSTEM_PROMPT } from '../prompts';
+import { ANALYZE_SYSTEM_PROMPT, ANALYZE_USER_TEMPLATE } from '../prompts';
 
 export async function analyzeNode(state: AgentState): Promise<Partial<AgentState>> {
-  const apiKey = process.env.ANTHROPIC_API_KEY;
-  if (!apiKey) {
-    throw new Error('Missing ANTHROPIC_API_KEY environment variable. Please configure it to enable the agent.');
+  if (state.error) {
+    return {};
   }
 
-  const model = new ChatAnthropic({
-    modelName: 'claude-3-5-sonnet-20240620',
+  const apiKey = process.env.GROQ_API_KEY;
+  if (!apiKey) {
+    throw new Error('Missing GROQ_API_KEY environment variable. Please configure it to enable the agent.');
+  }
+
+  const model = new ChatGroq({
+    model: 'llama-3.1-8b-instant',
     temperature: 0.2,
-    anthropicApiKey: apiKey,
+    apiKey: apiKey,
+    maxRetries: 0,
   });
 
   const company = state.canonicalEntity?.name || state.companyName || '';
@@ -24,9 +29,7 @@ export async function analyzeNode(state: AgentState): Promise<Partial<AgentState
     ? `\nNote: The following research errors occurred and some data might be missing:\n${state.errors.join('\n')}`
     : '';
 
-  const userPrompt = `Please analyze the retrieved research inputs for the company "${company}" and output a structured Findings report.
-
-=== RECENT NEWS ===
+  const categorizedResults = `=== RECENT NEWS ===
 ${news}
 
 === FINANCIALS & REVENUE ===
@@ -39,10 +42,9 @@ ${competitors}
 ${risks}
 
 === LEADERSHIP & MANAGEMENT ===
-${leadership}
-${errorsText}
+${leadership}${errorsText}`;
 
-Output the finalized report in structured format including growth signals, risk signals, competitive position summary, financial health summary, and deduplicated URLs as sources.`;
+  const userPrompt = ANALYZE_USER_TEMPLATE(categorizedResults);
 
   const runWithPrompt = async (errorMsg?: string): Promise<IFindings> => {
     const structuredModel = model.withStructuredOutput(FindingsSchema);
@@ -67,6 +69,34 @@ Output the finalized report in structured format including growth signals, risk 
     const findings = await runWithPrompt();
     return { findings };
   } catch (err: any) {
+    console.error("FIRST RUN FAILED WITH ERROR:", err);
+    console.error("FIRST RUN ERROR KEYS:", Object.keys(err));
+    console.error("FIRST RUN ERROR CAUSE:", err.cause);
+    const errMsg = (err?.message || String(err)).toLowerCase();
+    const causeMsg = (err?.cause?.message || String(err?.cause || '')).toLowerCase();
+    const isRateLimit = err?.status === 429 || 
+                        err?.cause?.status === 429 ||
+                        errMsg.includes('429') || 
+                        errMsg.includes('rate limit') || 
+                        errMsg.includes('rate_limit_exceeded') ||
+                        causeMsg.includes('429') ||
+                        causeMsg.includes('rate limit') ||
+                        causeMsg.includes('rate_limit_exceeded');
+    
+    if (isRateLimit) {
+      console.warn(`Analyze node hit rate limit for ${company}. Sleeping 30 seconds before retrying...`);
+      await new Promise((res) => setTimeout(res, 30000));
+      try {
+        const findings = await runWithPrompt();
+        return { findings };
+      } catch (retryErr: any) {
+        console.error(`Analyze node retry after rate limit failed:`, retryErr);
+        return {
+          error: `Analysis structured output failed (Rate Limit): ${retryErr?.message || retryErr}`,
+        };
+      }
+    }
+
     console.warn(`Analyze node structured output failed for ${company}, retrying with corrective prompt...`, err);
     try {
       const findings = await runWithPrompt(err?.message || String(err));

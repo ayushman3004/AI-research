@@ -12,6 +12,9 @@ function getSearchCompany(state: AgentState): string {
  * research_news node: Searches recent news
  */
 export async function researchNewsNode(state: AgentState) {
+  if (state.error) {
+    return {};
+  }
   const company = getSearchCompany(state);
   const query = `"${company}" recent news developments`;
   console.log(`Running research_news for: ${company}`);
@@ -19,7 +22,7 @@ export async function researchNewsNode(state: AgentState) {
   try {
     const searchResults = await searchWeb(query);
     const textResults = searchResults.map(
-      (r) => `[Source: ${r.title}](${r.url})\nContent: ${r.content}`
+      (r) => `[Source: ${r.title}](${r.url})\nContent: ${r.content.slice(0, 1000)}${r.content.length > 1000 ? '...' : ''}`
     );
     const urls = searchResults.map((r) => r.url).filter(Boolean);
 
@@ -40,6 +43,9 @@ export async function researchNewsNode(state: AgentState) {
  * research_financials node: Searches financials, revenue, funding
  */
 export async function researchFinancialsNode(state: AgentState) {
+  if (state.error) {
+    return {};
+  }
   const company = getSearchCompany(state);
   const query = `"${company}" funding valuation OR revenue OR financial performance`;
   console.log(`Running research_financials for: ${company}`);
@@ -47,7 +53,7 @@ export async function researchFinancialsNode(state: AgentState) {
   try {
     const searchResults = await searchWeb(query);
     const textResults = searchResults.map(
-      (r) => `[Source: ${r.title}](${r.url})\nContent: ${r.content}`
+      (r) => `[Source: ${r.title}](${r.url})\nContent: ${r.content.slice(0, 1000)}${r.content.length > 1000 ? '...' : ''}`
     );
     const urls = searchResults.map((r) => r.url).filter(Boolean);
 
@@ -68,6 +74,9 @@ export async function researchFinancialsNode(state: AgentState) {
  * research_competitors node: Searches competitors and market share
  */
 export async function researchCompetitorsNode(state: AgentState) {
+  if (state.error) {
+    return {};
+  }
   const company = getSearchCompany(state);
   const query = `"${company}" main competitors market share OR industry moat`;
   console.log(`Running research_competitors for: ${company}`);
@@ -75,7 +84,7 @@ export async function researchCompetitorsNode(state: AgentState) {
   try {
     const searchResults = await searchWeb(query);
     const textResults = searchResults.map(
-      (r) => `[Source: ${r.title}](${r.url})\nContent: ${r.content}`
+      (r) => `[Source: ${r.title}](${r.url})\nContent: ${r.content.slice(0, 1000)}${r.content.length > 1000 ? '...' : ''}`
     );
     const urls = searchResults.map((r) => r.url).filter(Boolean);
 
@@ -96,6 +105,9 @@ export async function researchCompetitorsNode(state: AgentState) {
  * research_risks node: Searches risks, controversies, lawsuits
  */
 export async function researchRisksNode(state: AgentState) {
+  if (state.error) {
+    return {};
+  }
   const company = getSearchCompany(state);
   const query = `"${company}" controversy OR lawsuit OR risk factors regulatory issues`;
   console.log(`Running research_risks for: ${company}`);
@@ -103,7 +115,7 @@ export async function researchRisksNode(state: AgentState) {
   try {
     const searchResults = await searchWeb(query);
     const textResults = searchResults.map(
-      (r) => `[Source: ${r.title}](${r.url})\nContent: ${r.content}`
+      (r) => `[Source: ${r.title}](${r.url})\nContent: ${r.content.slice(0, 1000)}${r.content.length > 1000 ? '...' : ''}`
     );
     const urls = searchResults.map((r) => r.url).filter(Boolean);
 
@@ -124,6 +136,9 @@ export async function researchRisksNode(state: AgentState) {
  * research_leadership node: Searches leadership, management, CEO
  */
 export async function researchLeadershipNode(state: AgentState) {
+  if (state.error) {
+    return {};
+  }
   const company = getSearchCompany(state);
   const query = `"${company}" CEO leadership team management board of directors`;
   console.log(`Running research_leadership for: ${company}`);
@@ -131,7 +146,7 @@ export async function researchLeadershipNode(state: AgentState) {
   try {
     const searchResults = await searchWeb(query);
     const textResults = searchResults.map(
-      (r) => `[Source: ${r.title}](${r.url})\nContent: ${r.content}`
+      (r) => `[Source: ${r.title}](${r.url})\nContent: ${r.content.slice(0, 1000)}${r.content.length > 1000 ? '...' : ''}`
     );
     const urls = searchResults.map((r) => r.url).filter(Boolean);
 

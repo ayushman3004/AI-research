@@ -1,17 +1,22 @@
-import { ChatAnthropic } from '@langchain/anthropic';
+import { ChatGroq } from '@langchain/groq';
 import { AgentState, VerdictSchema, IVerdict } from '../state';
-import { DECIDE_SYSTEM_PROMPT } from '../prompts';
+import { DECIDE_SYSTEM_PROMPT, DECIDE_USER_TEMPLATE } from '../prompts';
 
 export async function decideNode(state: AgentState): Promise<Partial<AgentState>> {
-  const apiKey = process.env.ANTHROPIC_API_KEY;
-  if (!apiKey) {
-    throw new Error('Missing ANTHROPIC_API_KEY environment variable. Please configure it to enable the agent.');
+  if (state.error) {
+    return {};
   }
 
-  const model = new ChatAnthropic({
-    modelName: 'claude-3-5-sonnet-20240620',
+  const apiKey = process.env.GROQ_API_KEY;
+  if (!apiKey) {
+    throw new Error('Missing GROQ_API_KEY environment variable. Please configure it to enable the agent.');
+  }
+
+  const model = new ChatGroq({
+    model: 'llama-3.1-8b-instant',
     temperature: 0.2,
-    anthropicApiKey: apiKey,
+    apiKey: apiKey,
+    maxRetries: 0,
   });
 
   const company = state.canonicalEntity?.name || state.companyName || '';
@@ -21,9 +26,7 @@ export async function decideNode(state: AgentState): Promise<Partial<AgentState>
     return { error: 'No findings available to make a decision' };
   }
 
-  const userPrompt = `Please evaluate the compiled research findings for "${company}" and make a final Invest/Pass investment decision.
-
-=== GROWTH SIGNALS ===
+  const findingsText = `=== GROWTH SIGNALS ===
 ${findings.growth_signals.map((s) => `- ${s}`).join('\n')}
 
 === RISK SIGNALS ===
@@ -33,9 +36,9 @@ ${findings.risk_signals.map((s) => `- ${s}`).join('\n')}
 ${findings.competitive_position}
 
 === FINANCIAL HEALTH ===
-${findings.financial_health}
+${findings.financial_health}`;
 
-Output your final investment decision as a structured Verdict object. Make sure the confidence score is a number, and reasoning is between 3 and 6 concise, data-driven bullet points.`;
+  const userPrompt = DECIDE_USER_TEMPLATE(findingsText);
 
   const runWithPrompt = async (errorMsg?: string): Promise<IVerdict> => {
     const structuredModel = model.withStructuredOutput(VerdictSchema);
@@ -60,6 +63,31 @@ Output your final investment decision as a structured Verdict object. Make sure 
     const verdict = await runWithPrompt();
     return { verdict };
   } catch (err: any) {
+    const errMsg = (err?.message || String(err)).toLowerCase();
+    const causeMsg = (err?.cause?.message || String(err?.cause || '')).toLowerCase();
+    const isRateLimit = err?.status === 429 || 
+                        err?.cause?.status === 429 ||
+                        errMsg.includes('429') || 
+                        errMsg.includes('rate limit') || 
+                        errMsg.includes('rate_limit_exceeded') ||
+                        causeMsg.includes('429') ||
+                        causeMsg.includes('rate limit') ||
+                        causeMsg.includes('rate_limit_exceeded');
+    
+    if (isRateLimit) {
+      console.warn(`Decide node hit rate limit for ${company}. Sleeping 30 seconds before retrying...`);
+      await new Promise((res) => setTimeout(res, 30000));
+      try {
+        const verdict = await runWithPrompt();
+        return { verdict };
+      } catch (retryErr: any) {
+        console.error(`Decide node retry after rate limit failed:`, retryErr);
+        return {
+          error: `Decision structured output failed (Rate Limit): ${retryErr?.message || retryErr}`,
+        };
+      }
+    }
+
     console.warn(`Decide node structured output failed for ${company}, retrying with corrective prompt...`, err);
     try {
       const verdict = await runWithPrompt(err?.message || String(err));

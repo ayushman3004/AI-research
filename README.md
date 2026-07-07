@@ -1,6 +1,6 @@
 # AI Investment Research Agent
 
-A full-stack Next.js 16 Web Application utilizing LangGraph.js and Claude 3.5 Sonnet to construct a multi-vector equity analysis terminal. Users input a company name, and the agent resolves its entity, runs parallel searches for background data, analyzes signals, and stamps an Invest/Pass verdict. 
+A full-stack Next.js 16 Web Application utilizing LangGraph.js and Groq Llama 3.3 70B to construct a multi-vector equity analysis terminal. Users input a company name, and the agent resolves its entity, runs parallel searches for background data, analyzes signals, and stamps an Invest/Pass verdict. 
 
 Access is secured via Firebase Authentication, and research records are cached/persisted in MongoDB Atlas.
 
@@ -26,7 +26,7 @@ Copy the `.env.example` file to `.env.local` and populate it with your API keys:
 cp .env.example .env.local
 ```
 Make sure you configure:
-* `ANTHROPIC_API_KEY`: API key for accessing Claude 3.5 Sonnet.
+* `GROQ_API_KEY`: API key for accessing Llama 3.3 70B via Groq.
 * `TAVILY_API_KEY`: API key for conducting web searches.
 * `MONGODB_URI`: Connection string to your MongoDB Atlas cluster.
 * Firebase Client Variables (`NEXT_PUBLIC_FIREBASE_*`).
@@ -100,10 +100,10 @@ The system splits execution between the client web terminal, the token validatio
        │         │          │          │          │          │
        │         └──────────┼──────────┼──────────┼──────────┘  (Parallel Fan-in)
        │                    ▼
-       │                [analyze] (Claude structured summary to Findings schema)
+       │                [analyze] (Llama 3.3 70B structured summary to Findings schema)
        │                    │
        │                    ▼
-       │                [decide] (Claude weighs memo and stamps Verdict)
+       │                [decide] (Llama 3.3 70B weighs memo and stamps Verdict)
        │                    │
        │                    ▼
        │         [Persist result in DB] ──► [Write User history entry]

@@ -486,7 +486,7 @@ export default function AnalyzePage() {
                   </div>
                   <div>
                     <span className="font-bold uppercase tracking-wider">Node: Analyze</span>
-                    <span className="text-slate-400 dark:text-zinc-500 ml-2">| Claude consolidates text inputs into typed Findings schema</span>
+                    <span className="text-slate-400 dark:text-zinc-500 ml-2">| Groq Llama 3.3 70B consolidates text inputs into typed Findings schema</span>
                   </div>
                 </div>
 

@@ -24,8 +24,8 @@ This document tracks the features implemented in this project, explaining their 
 * **Description:** Orchestrates the multi-step research pipeline with LangGraph.
   * **Identify Node:** Disambiguates user input into ticker/canonical name.
   * **Parallel Research Nodes:** Concurrent searches for News, Financials, Competitors, Risks, and Leadership.
-  * **Analyze Node:** Uses structured output (via Claude + zod) to create structured Findings.
-  * **Decide Node:** Uses structured output (via Claude + zod) to output the final Verdict stamp.
+  * **Analyze Node:** Uses structured output (via Groq Llama 3.3 70B + zod) to create structured Findings.
+  * **Decide Node:** Uses structured output (via Groq Llama 3.3 70B + zod) to output the final Verdict stamp.
 * **Code Reference:**
   * [lib/agent/state.ts](file:///Users/ayushmanbhattacharya/Desktop/airesearch/lib/agent/state.ts): Shared annotation state (AgentState) (Lines 1-76).
   * [lib/agent/prompts.ts](file:///Users/ayushmanbhattacharya/Desktop/airesearch/lib/agent/prompts.ts): Prompts for identification, analysis summary, and investment decision framework (Lines 1-49).

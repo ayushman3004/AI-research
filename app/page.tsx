@@ -174,7 +174,7 @@ export default function Home() {
             </div>
             <h3 className="font-serif font-medium text-base mb-2">Synthesize Findings</h3>
             <p className="text-xs leading-relaxed text-slate-500 dark:text-zinc-400">
-              Claude Sonnet consolidates the unstructured inputs into structured findings outlining positive signals, red flags, moat details, and sources.
+              Groq Llama 3.3 70B consolidates the unstructured inputs into structured findings outlining positive signals, red flags, moat details, and sources.
             </p>
           </div>
 
