@@ -37,9 +37,20 @@ export async function GET(request: Request) {
     );
   }
 
-  // 2. Fetch User History
+  // 2. Fetch User History or Specific Result
+  const { searchParams } = new URL(request.url);
+  const resultId = searchParams.get('resultId');
+
   try {
     await dbConnect();
+
+    if (resultId) {
+      const result = await ResearchResult.findOne({ _id: resultId, requestedBy: userId });
+      if (!result) {
+        return NextResponse.json({ error: 'Research result not found or access denied' }, { status: 404 });
+      }
+      return NextResponse.json(result);
+    }
 
     // Query entries and populate the linked ResearchResult schema details
     const historyEntries = await UserHistoryEntry.find({ userId })
@@ -70,6 +81,62 @@ export async function GET(request: Request) {
     console.error('Failed to fetch user history from database:', dbErr);
     return NextResponse.json(
       { error: `Database error: Failed to retrieve history: ${dbErr.message || dbErr}` },
+      { status: 500 }
+    );
+  }
+}
+
+export async function DELETE(request: Request) {
+  // 1. Verify Authorization Header
+  const authHeader = request.headers.get('Authorization');
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return NextResponse.json(
+      { error: 'Unauthorized: Missing or invalid token' },
+      { status: 401 }
+    );
+  }
+
+  const token = authHeader.substring(7);
+  let userId: string;
+
+  try {
+    if (!adminAuth) {
+      return NextResponse.json(
+        { error: 'Firebase Admin credentials are not configured.' },
+        { status: 500 }
+      );
+    }
+    const decodedToken = await adminAuth.verifyIdToken(token);
+    userId = decodedToken.uid;
+  } catch (err: any) {
+    return NextResponse.json(
+      { error: `Unauthorized: Token verification failed: ${err.message || err}` },
+      { status: 401 }
+    );
+  }
+
+  const { searchParams } = new URL(request.url);
+  const id = searchParams.get('id');
+
+  try {
+    await dbConnect();
+
+    if (id) {
+      // Delete specific history entry
+      const deleted = await UserHistoryEntry.findOneAndDelete({ _id: id, userId });
+      if (!deleted) {
+        return NextResponse.json({ error: 'History entry not found' }, { status: 404 });
+      }
+      return NextResponse.json({ success: true, deletedId: id });
+    } else {
+      // Delete all history entries for this user
+      await UserHistoryEntry.deleteMany({ userId });
+      return NextResponse.json({ success: true, cleared: true });
+    }
+  } catch (err: any) {
+    console.error('Failed to delete history:', err);
+    return NextResponse.json(
+      { error: `Failed to delete history: ${err.message || err}` },
       { status: 500 }
     );
   }

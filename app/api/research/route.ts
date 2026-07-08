@@ -56,49 +56,13 @@ export async function POST(request: Request) {
 
   const normalizedCompany = companyName.trim().toLowerCase();
 
-  // 3. Check MongoDB Cache
+  // 3. Connect to MongoDB (for history logging)
   let isDbConnected = false;
-  let cachedResult = null;
-  const ttlHours = parseInt(process.env.CACHE_TTL_HOURS || '24', 10);
-  const cacheThreshold = new Date(Date.now() - ttlHours * 60 * 60 * 1000);
-
   try {
     await dbConnect();
     isDbConnected = true;
-
-    // Look for a result within the cache threshold
-    cachedResult = await ResearchResult.findOne({
-      companyName: normalizedCompany,
-      createdAt: { $gte: cacheThreshold },
-    });
   } catch (dbErr) {
-    console.warn('MongoDB connection/query failed. Degrading gracefully (skipping cache check):', dbErr);
-  }
-
-  // 4. Cache Hit Flow
-  if (cachedResult) {
-    console.log(`Cache hit for "${normalizedCompany}". Skipping agent execution.`);
-    
-    // Log User History Entry (graceful fail on DB error)
-    if (isDbConnected) {
-      try {
-        await UserHistoryEntry.create({
-          userId,
-          resultId: cachedResult._id,
-          viewedAt: new Date(),
-        });
-      } catch (historyErr) {
-        console.warn('Failed to record user history entry for cache hit:', historyErr);
-      }
-    }
-
-    return NextResponse.json({
-      cached: true,
-      createdAt: cachedResult.createdAt,
-      canonicalEntity: cachedResult.canonicalEntity,
-      findings: cachedResult.findings,
-      verdict: cachedResult.verdict,
-    });
+    console.warn('MongoDB connection failed. Degrading gracefully (history recording will be skipped):', dbErr);
   }
 
   // 5. Cache Miss: Run LangGraph Agent

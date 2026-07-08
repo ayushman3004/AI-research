@@ -7,7 +7,7 @@ import Header from '@/components/Header';
 import { 
   Search, BookOpen, AlertCircle, TrendingUp, CheckCircle, 
   RotateCw, ArrowRight, History, Calendar, ExternalLink, 
-  Cpu, Users, DollarSign, BarChart2, ShieldAlert
+  Cpu, Users, DollarSign, BarChart2, ShieldAlert, Trash2
 } from 'lucide-react';
 
 interface IFindings {
@@ -39,6 +39,7 @@ interface IResult {
 }
 
 interface IHistoryItem {
+  id: string;
   resultId: string;
   companyName: string;
   ticker?: string | null;
@@ -172,36 +173,50 @@ export default function AnalyzePage() {
     setErrorMessage('');
     setTraceStatus('idle');
     setResearchResult(null);
-    setTraceStatus('identifying'); // simulate loading cached entry
+    
+    // Simulate nice quick fade-in of steps for cached loading
+    setTraceStatus('identifying');
+    setParallelActive({
+      news: 'running',
+      financials: 'running',
+      competitors: 'running',
+      risks: 'running',
+      leadership: 'running'
+    });
+
+    const timer1 = setTimeout(() => {
+      setTraceStatus('researching');
+      setParallelActive({
+        news: 'completed',
+        financials: 'completed',
+        competitors: 'completed',
+        risks: 'completed',
+        leadership: 'completed'
+      });
+    }, 400);
+
+    const timer2 = setTimeout(() => {
+      setTraceStatus('analyzing');
+    }, 800);
+
+    const timer3 = setTimeout(() => {
+      setTraceStatus('deciding');
+    }, 1200);
     
     try {
-      // Find inside our local history list or fetch
-      // Since history returns brief info, we reload from DB if needed
-      // Actually we can hit POST /api/research with the exact company name which will be a cache hit instantly!
       const historyItem = historyList.find(h => h.resultId === resultId);
       if (historyItem) {
         setCompanyInput(historyItem.companyName);
-        
-        // Trigger research fetch which will hit cache immediately
-        setTraceStatus('researching');
-        setParallelActive({
-          news: 'completed',
-          financials: 'completed',
-          competitors: 'completed',
-          risks: 'completed',
-          leadership: 'completed'
-        });
-        setTraceStatus('analyzing');
-        setTraceStatus('deciding');
 
-        const response = await fetch('/api/research', {
-          method: 'POST',
+        const response = await fetch(`/api/history?resultId=${encodeURIComponent(resultId)}`, {
           headers: {
-            'Content-Type': 'application/json',
             'Authorization': `Bearer ${token}`
-          },
-          body: JSON.stringify({ companyName: historyItem.companyName })
+          }
         });
+
+        clearTimeout(timer1);
+        clearTimeout(timer2);
+        clearTimeout(timer3);
 
         if (response.ok) {
           const data = await response.json();
@@ -213,8 +228,55 @@ export default function AnalyzePage() {
         }
       }
     } catch (err: any) {
+      clearTimeout(timer1);
+      clearTimeout(timer2);
+      clearTimeout(timer3);
       setErrorMessage(err.message || 'Failed to retrieve cached report.');
       setTraceStatus('error');
+    }
+  };
+
+  // Delete a specific history entry
+  const deleteHistoryItem = async (id: string) => {
+    if (!token) return;
+    try {
+      const response = await fetch(`/api/history?id=${encodeURIComponent(id)}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      if (response.ok) {
+        // Remove from list
+        setHistoryList(prev => prev.filter(item => item.id !== id));
+      } else {
+        const errData = await response.json();
+        console.error('Failed to delete history item:', errData.error);
+      }
+    } catch (err) {
+      console.error('Error deleting history item:', err);
+    }
+  };
+
+  // Clear all history entries
+  const clearAllHistory = async () => {
+    if (!token) return;
+    if (!window.confirm('Are you sure you want to clear your entire research archive?')) return;
+    try {
+      const response = await fetch('/api/history', {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      if (response.ok) {
+        setHistoryList([]);
+      } else {
+        const errData = await response.json();
+        console.error('Failed to clear history:', errData.error);
+      }
+    } catch (err) {
+      console.error('Error clearing history:', err);
     }
   };
 
@@ -348,11 +410,21 @@ export default function AnalyzePage() {
         
         {/* Sidebar History Panel */}
         <aside className="border-r border-slate-200/80 dark:border-zinc-800/80 p-6 flex flex-col lg:col-span-1 min-h-[400px] lg:min-h-[calc(100vh-73px)]">
-          <div className="flex items-center gap-2 mb-6">
-            <History className="w-4 h-4 text-slate-500 dark:text-zinc-400" />
-            <h2 className="font-mono text-2xs uppercase tracking-widest text-slate-500 dark:text-zinc-400 font-semibold">
-              Research Archives
-            </h2>
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-2">
+              <History className="w-4 h-4 text-slate-500 dark:text-zinc-400" />
+              <h2 className="font-mono text-2xs uppercase tracking-widest text-slate-500 dark:text-zinc-400 font-semibold">
+                Research Archives
+              </h2>
+            </div>
+            {historyList.length > 0 && (
+              <button 
+                onClick={clearAllHistory}
+                className="text-[10px] font-mono uppercase text-rose-600 hover:text-rose-500 cursor-pointer bg-transparent border-0 p-0"
+              >
+                Clear All
+              </button>
+            )}
           </div>
 
           {historyLoading && historyList.length === 0 ? (
@@ -367,13 +439,13 @@ export default function AnalyzePage() {
           ) : (
             <div className="space-y-3 overflow-y-auto max-h-[300px] lg:max-h-[500px] pr-1">
               {historyList.map((item, idx) => (
-                <button
-                  key={`${item.resultId}-${idx}`}
+                <div
+                  key={`${item.id}-${idx}`}
                   onClick={() => loadHistoricResult(item.resultId)}
-                  className="w-full text-left p-3.5 border border-slate-200 dark:border-zinc-800 hover:border-slate-800 dark:hover:border-zinc-400 bg-white dark:bg-zinc-900 transition-all flex flex-col gap-1.5 cursor-pointer shadow-2xs hover:shadow-sm"
+                  className="group relative w-full text-left p-3.5 border border-slate-200 dark:border-zinc-800 hover:border-slate-800 dark:hover:border-zinc-400 bg-white dark:bg-zinc-900 transition-all flex flex-col gap-1.5 cursor-pointer shadow-2xs hover:shadow-sm"
                 >
-                  <div className="flex justify-between items-start gap-1">
-                    <span className="font-serif font-bold text-xs truncate max-w-[80%]">
+                  <div className="flex justify-between items-start gap-1 pr-6">
+                    <span className="font-serif font-bold text-xs truncate max-w-[85%]">
                       {item.companyName}
                     </span>
                     {item.ticker && (
@@ -390,7 +462,18 @@ export default function AnalyzePage() {
                       {formatDate(item.viewedAt)}
                     </span>
                   </div>
-                </button>
+
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      deleteHistoryItem(item.id);
+                    }}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-rose-600 opacity-0 group-hover:opacity-100 transition-opacity duration-250 cursor-pointer bg-transparent border-0"
+                    title="Delete entry"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+                </div>
               ))}
             </div>
           )}
