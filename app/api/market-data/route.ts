@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import https from 'https';
 
+export const dynamic = 'force-dynamic';
+
 function fetchJsonNative(url: string): Promise<any> {
   return new Promise((resolve, reject) => {
     https.get(url, {

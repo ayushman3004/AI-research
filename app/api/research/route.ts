@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import { adminAuth } from '@/lib/firebase/admin';
 import { dbConnect } from '@/lib/db/mongoose';
+
+export const dynamic = 'force-dynamic';
 import ResearchResult from '@/lib/db/models/ResearchResult';
 import UserHistoryEntry from '@/lib/db/models/UserHistoryEntry';
 import { graph } from '@/lib/agent/graph';

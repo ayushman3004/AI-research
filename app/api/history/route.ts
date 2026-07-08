@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import { adminAuth } from '@/lib/firebase/admin';
 import { dbConnect } from '@/lib/db/mongoose';
+
+export const dynamic = 'force-dynamic';
 import UserHistoryEntry from '@/lib/db/models/UserHistoryEntry';
 import ResearchResult from '@/lib/db/models/ResearchResult'; // Needed to register the schema for population
 
