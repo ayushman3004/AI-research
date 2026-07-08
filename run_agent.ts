@@ -20,10 +20,11 @@ if (fs.existsSync(envPath)) {
 }
 
 async function run() {
-  console.log('Invoking agent for Apple Inc...');
+  const companyName = process.argv[2] || 'Apple Inc.';
+  console.log(`Invoking agent for ${companyName}...`);
   try {
     const res = await graph.invoke({
-      companyName: 'Apple Inc.'
+      companyName: companyName
     });
     console.log('Result:', JSON.stringify(res, null, 2));
   } catch (err) {

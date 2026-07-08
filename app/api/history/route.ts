@@ -4,6 +4,9 @@ import { dbConnect } from '@/lib/db/mongoose';
 import UserHistoryEntry from '@/lib/db/models/UserHistoryEntry';
 import ResearchResult from '@/lib/db/models/ResearchResult'; // Needed to register the schema for population
 
+// Reference model to prevent tree-shaking and register schema in Mongoose
+const _unusedResearchResult = ResearchResult;
+
 export async function GET(request: Request) {
   // 1. Verify Authorization Header
   const authHeader = request.headers.get('Authorization');

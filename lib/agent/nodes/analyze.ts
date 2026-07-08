@@ -13,7 +13,7 @@ export async function analyzeNode(state: AgentState): Promise<Partial<AgentState
   }
 
   const model = new ChatGroq({
-    model: 'llama-3.1-8b-instant',
+    model: 'llama-3.3-70b-versatile',
     temperature: 0.2,
     apiKey: apiKey,
     maxRetries: 0,
@@ -74,6 +74,7 @@ ${leadership}${errorsText}`;
     console.error("FIRST RUN ERROR CAUSE:", err.cause);
     const errMsg = (err?.message || String(err)).toLowerCase();
     const causeMsg = (err?.cause?.message || String(err?.cause || '')).toLowerCase();
+    const combined = `${errMsg} ${causeMsg}`;
     const isRateLimit = err?.status === 429 || 
                         err?.cause?.status === 429 ||
                         errMsg.includes('429') || 
@@ -84,8 +85,24 @@ ${leadership}${errorsText}`;
                         causeMsg.includes('rate_limit_exceeded');
     
     if (isRateLimit) {
-      console.warn(`Analyze node hit rate limit for ${company}. Sleeping 30 seconds before retrying...`);
-      await new Promise((res) => setTimeout(res, 30000));
+      // Parse retry-after/try-again delay from error message
+      const delayMatch = combined.match(/try again in ([\d\.]+)(s|ms|m)/);
+      let sleepMs = 3000; // default 3 seconds fallback
+      if (delayMatch) {
+        const value = parseFloat(delayMatch[1]);
+        const unit = delayMatch[2];
+        if (unit === 'ms') {
+          sleepMs = value;
+        } else if (unit === 'm') {
+          sleepMs = value * 60 * 1000;
+        } else {
+          sleepMs = value * 1000;
+        }
+      }
+      // Add a 1-second buffer to guarantee safety
+      const finalSleepMs = sleepMs + 1000;
+      console.warn(`Analyze node hit rate limit for ${company}. Sleeping ${finalSleepMs / 1000}s before retrying...`);
+      await new Promise((res) => setTimeout(res, finalSleepMs));
       try {
         const findings = await runWithPrompt();
         return { findings };

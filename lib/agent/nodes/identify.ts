@@ -11,9 +11,18 @@ const IdentifySchema = z.object({
 });
 
 export async function identifyNode(state: AgentState) {
-  const { companyName } = state;
+  let { companyName } = state;
   if (!companyName) {
     return { error: 'No company name provided to identify' };
+  }
+
+  // Preprocess input: title-case if it is completely lowercase to assist resolution (e.g. "tata" -> "Tata")
+  companyName = companyName.trim();
+  if (companyName && companyName === companyName.toLowerCase()) {
+    companyName = companyName
+      .split(/\s+/)
+      .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+      .join(' ');
   }
 
   const apiKey = process.env.GROQ_API_KEY;
@@ -45,18 +54,35 @@ export async function identifyNode(state: AgentState) {
     } catch (invokeErr: any) {
       const errMsg = (invokeErr?.message || String(invokeErr)).toLowerCase();
       const causeMsg = (invokeErr?.cause?.message || String(invokeErr?.cause || '')).toLowerCase();
-      const isRateLimit = invokeErr?.status === 429 || 
-                          invokeErr?.cause?.status === 429 ||
-                          errMsg.includes('429') || 
-                          errMsg.includes('rate limit') || 
-                          errMsg.includes('rate_limit_exceeded') ||
-                          causeMsg.includes('429') ||
-                          causeMsg.includes('rate limit') ||
-                          causeMsg.includes('rate_limit_exceeded');
+      const combined = `${errMsg} ${causeMsg}`;
+      const isRateLimit = invokeErr?.status === 429 ||
+        invokeErr?.cause?.status === 429 ||
+        errMsg.includes('429') ||
+        errMsg.includes('rate limit') ||
+        errMsg.includes('rate_limit_exceeded') ||
+        causeMsg.includes('429') ||
+        causeMsg.includes('rate limit') ||
+        causeMsg.includes('rate_limit_exceeded');
 
       if (isRateLimit) {
-        console.warn('Identify node hit rate limit, retrying in 30 seconds...');
-        await new Promise((res) => setTimeout(res, 30000));
+        // Parse retry-after/try-again delay from error message
+        const delayMatch = combined.match(/try again in ([\d\.]+)(s|ms|m)/);
+        let sleepMs = 3000; // default 3 seconds fallback
+        if (delayMatch) {
+          const value = parseFloat(delayMatch[1]);
+          const unit = delayMatch[2];
+          if (unit === 'ms') {
+            sleepMs = value;
+          } else if (unit === 'm') {
+            sleepMs = value * 60 * 1000;
+          } else {
+            sleepMs = value * 1000;
+          }
+        }
+        // Add a 1-second buffer to guarantee safety
+        const finalSleepMs = sleepMs + 1000;
+        console.warn(`Identify node hit rate limit. Sleeping ${finalSleepMs / 1000}s before retrying...`);
+        await new Promise((res) => setTimeout(res, finalSleepMs));
         result = await runCall();
       } else {
         throw invokeErr;

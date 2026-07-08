@@ -15,14 +15,18 @@ Your task is to take a raw, potentially ambiguous company name entered by a user
 
 Output a structured JSON object containing:
 - resolved: true if the input corresponds to a real, identifiable company; false otherwise.
-- name: The canonical/official company name (e.g. "Apple Inc.", "Microsoft Corporation"). If unresolved, your best guess or null.
+- name: The canonical/official company name with proper capitalization (e.g. "Apple Inc.", "Microsoft Corporation", "EPAM Systems"). Do NOT return the name in all lowercase. If unresolved, your best guess or null.
 - ticker: The stock ticker symbol if publicly traded, formatted as "TICKER" (e.g. "AAPL", "MSFT"). If private or unresolved, null.
 - domain: The official corporate website domain (e.g. "apple.com", "microsoft.com"). If unresolved, null.
 
-Disambiguation rules:
+Disambiguation and casing rules:
+- If the input is in lowercase or partially lowercase, resolve it to the correct canonical capitalized name (e.g., "tata" -> "Tata Group", "epam" -> "EPAM Systems", "apple" -> "Apple Inc.").
 - If the name is widely known, resolve it to its primary public entity (e.g. "Google" -> "Alphabet Inc.", ticker "GOOGL").
 - If the name refers to a subsidiary or division of a larger public company, resolve to the parent public entity and note the subsidiary relationship is implied by the resolved name — do not invent a separate ticker for a subsidiary that doesn't trade independently.
 - If multiple unrelated companies share a similar name, pick the most prominent/widely-referenced one and proceed — do not ask for clarification, this is a single-shot resolution step.
+
+Important:
+- The ticker field must contain ONLY the stock ticker symbol itself (e.g. "AAPL", "MSFT", "EPAM"). Do NOT include any sentences, notes, explanations, or suggestions in the ticker field. If the company is a conglomerate (like Tata Group) that doesn't trade under a single ticker, set the ticker to null or use the primary/largest public unit ticker (e.g. TCS for Tata Group).
 
 Critical: if the input does NOT correspond to a real, identifiable company — e.g. it's gibberish, a generic term, a person's name, or you have no reasonable basis to believe it refers to an actual business — set resolved to false. Do NOT invent a plausible-sounding company to fill the gap. Guessing at a fictional entity is a worse outcome than honestly reporting that resolution failed.`;
 
@@ -48,7 +52,7 @@ Extract and summarize into:
 1. growth_signals: MUST be an array of strings (e.g., ["signal 1", "signal 2"]). Positive developments — market expansion, strategic partnerships, product launches, favorable growth trends.
 2. risk_signals: MUST be an array of strings (e.g., ["risk 1", "risk 2"]). Lawsuits, regulatory hurdles, security breaches, leadership departures, financial declines, macro threats.
 3. competitive_position: Market share, competitive moat, key competitors, and points of differentiation.
-4. financial_health: Revenue figures, funding rounds, valuation, or profitability status, based only on retrieved financial data.
+4. financial_health: Revenue figures, funding rounds, valuation, or profitability status, based only on retrieved financial data. Be sure to extract and summarize key Yahoo Finance stock metrics (e.g., stock price, market cap, P/E ratio, revenue growth, or price performance) if they are present in the financials search results.
 5. sources: Deduplicated URLs. Every URL must have appeared verbatim in the raw search results provided to you — never construct or guess a URL.
 
 Rules:
@@ -73,13 +77,13 @@ Apply this framework:
 1. Growth signals and market potential.
 2. Competitive moat and market positioning.
 3. Quality of the leadership team.
-4. Financial health, funding, or revenue trends.
+4. Financial health, funding, or revenue trends. (Integrate Yahoo Finance stock metrics, valuation ratios, and stock performance if present in the Findings).
 5. Key risks — regulatory, operational, execution, macro.
 
 Output:
 - verdict: "INVEST" or "PASS"
 - confidence: 0-100
-- reasoning: 3-6 high-impact bullets, each citing a concrete finding
+- reasoning: 3-6 high-impact bullets, each citing a concrete finding (including Yahoo Finance stock data analysis where available)
 - key_risks: top risks that could derail this decision
 - key_opportunities: top factors that support or could accelerate the trajectory
 

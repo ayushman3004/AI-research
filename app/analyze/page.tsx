@@ -49,6 +49,33 @@ interface IHistoryItem {
 
 type TraceStatus = 'idle' | 'identifying' | 'researching' | 'analyzing' | 'deciding' | 'completed' | 'error';
 
+const getCurrencySymbol = (code: string) => {
+  switch (code) {
+    case 'USD': return '$';
+    case 'INR': return '₹';
+    case 'EUR': return '€';
+    case 'GBP': return '£';
+    case 'JPY': return '¥';
+    default: return `${code} `;
+  }
+};
+
+const formatLargeNumber = (num: number, currency: string = 'USD'): string => {
+  if (!num) return 'N/A';
+  const prefix = getCurrencySymbol(currency);
+  
+  if (num >= 1e12) {
+    return `${prefix}${(num / 1e12).toFixed(2)}T`;
+  }
+  if (num >= 1e9) {
+    return `${prefix}${(num / 1e9).toFixed(2)}B`;
+  }
+  if (num >= 1e6) {
+    return `${prefix}${(num / 1e6).toFixed(2)}M`;
+  }
+  return `${prefix}${num.toLocaleString()}`;
+};
+
 export default function AnalyzePage() {
   const router = useRouter();
   const { user, token, loading } = useAuth();
@@ -71,6 +98,40 @@ export default function AnalyzePage() {
   // User history states
   const [historyList, setHistoryList] = useState<IHistoryItem[]>([]);
   const [historyLoading, setHistoryLoading] = useState(false);
+
+  // Market data states
+  const [marketData, setMarketData] = useState<any>(null);
+  const [marketDataLoading, setMarketDataLoading] = useState(false);
+  const [marketDataError, setMarketDataError] = useState('');
+
+  // Fetch market data from API
+  const fetchMarketData = useCallback(async (ticker: string) => {
+    setMarketDataLoading(true);
+    setMarketDataError('');
+    setMarketData(null);
+    try {
+      const res = await fetch(`/api/market-data?ticker=${encodeURIComponent(ticker)}`);
+      if (!res.ok) {
+        throw new Error('Failed to fetch market data');
+      }
+      const data = await res.json();
+      setMarketData(data);
+    } catch (err: any) {
+      console.error('Error fetching market data:', err);
+      setMarketDataError(err.message || 'Failed to load stock data.');
+    } finally {
+      setMarketDataLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (researchResult?.canonicalEntity?.ticker) {
+      fetchMarketData(researchResult.canonicalEntity.ticker);
+    } else {
+      setMarketData(null);
+      setMarketDataError('');
+    }
+  }, [researchResult, fetchMarketData]);
 
   // 1. Client Redirect Guard
   useEffect(() => {
@@ -611,6 +672,93 @@ export default function AnalyzePage() {
                     ))}
                   </ul>
                 </section>
+
+                {/* Real Market Data Section */}
+                {researchResult.canonicalEntity?.ticker && (
+                  <section className="border border-slate-100 dark:border-zinc-850 p-6 bg-slate-50/20 dark:bg-zinc-950/5">
+                    <h3 className="font-mono text-2xs uppercase tracking-widest text-slate-500 dark:text-zinc-400 font-bold mb-4 border-b border-slate-100 dark:border-zinc-800 pb-1.5 flex items-center gap-2">
+                      <BarChart2 className="w-4 h-4 text-slate-500 dark:text-zinc-400" />
+                      <span>Real-Time Market Data (Yahoo Finance)</span>
+                    </h3>
+
+                    {marketDataLoading ? (
+                      <div className="animate-pulse space-y-4">
+                        <div className="h-8 bg-slate-200 dark:bg-zinc-800 w-1/3 rounded-xs"></div>
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                          {[1, 2, 3, 4].map((i) => (
+                            <div key={i} className="h-12 bg-slate-200 dark:bg-zinc-850 rounded-xs"></div>
+                          ))}
+                        </div>
+                      </div>
+                    ) : marketDataError ? (
+                      <div className="text-2xs text-rose-600 dark:text-rose-400 font-mono bg-rose-50/50 dark:bg-rose-950/10 p-3 border border-rose-100 dark:border-rose-900/30">
+                        Error loading market statistics: {marketDataError}
+                      </div>
+                    ) : marketData ? (
+                      <div className="space-y-5">
+                        <div className="flex flex-col sm:flex-row sm:items-baseline justify-between gap-2">
+                          <div>
+                            <h4 className="text-sm font-semibold text-slate-800 dark:text-zinc-200">
+                              {marketData.displayName}
+                            </h4>
+                            <p className="text-3xs text-slate-400 dark:text-zinc-500 font-mono mt-0.5">
+                              Ticker: {researchResult.canonicalEntity.ticker} • Currency: {marketData.currency}
+                            </p>
+                          </div>
+                          
+                          <div className="flex items-baseline gap-2">
+                            <span className="text-xl font-mono font-bold tracking-tight">
+                              {getCurrencySymbol(marketData.currency)}{marketData.price?.toFixed(2)}
+                            </span>
+                            <span className={`text-2xs font-mono font-semibold ${marketData.change >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`}>
+                              {marketData.change >= 0 ? '+' : ''}{marketData.change?.toFixed(2)} ({marketData.changePercent >= 0 ? '+' : ''}{marketData.changePercent?.toFixed(2)}%)
+                            </span>
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-3 border-t border-slate-100 dark:border-zinc-800">
+                          <div>
+                            <p className="text-3xs font-mono uppercase tracking-wider text-slate-400 dark:text-zinc-500">Exchange</p>
+                            <p className="text-xs font-semibold mt-1">
+                              {marketData.exchange}
+                            </p>
+                          </div>
+                          <div>
+                            <p className="text-3xs font-mono uppercase tracking-wider text-slate-400 dark:text-zinc-500">Daily Volume</p>
+                            <p className="text-xs font-semibold mt-1">
+                              {marketData.volume ? marketData.volume.toLocaleString() : 'N/A'}
+                            </p>
+                          </div>
+                          <div>
+                            <p className="text-3xs font-mono uppercase tracking-wider text-slate-400 dark:text-zinc-500">52-Week Range</p>
+                            <div className="mt-1.5 flex items-center gap-1.5">
+                              <span className="text-4xs font-mono text-slate-400 dark:text-zinc-500">
+                                {getCurrencySymbol(marketData.currency)}{marketData.low52?.toFixed(1)}
+                              </span>
+                              <div className="grow bg-slate-200 dark:bg-zinc-800 h-1 rounded-full relative overflow-hidden">
+                                <div 
+                                  className="absolute bg-slate-500 dark:bg-zinc-400 h-full rounded-full"
+                                  style={{
+                                    left: `${Math.max(0, Math.min(100, ((marketData.price - marketData.low52) / (marketData.high52 - marketData.low52)) * 100))}%`,
+                                    width: '4px',
+                                    transform: 'translateX(-2px)'
+                                  }}
+                                />
+                              </div>
+                              <span className="text-4xs font-mono text-slate-400 dark:text-zinc-500">
+                                {getCurrencySymbol(marketData.currency)}{marketData.high52?.toFixed(1)}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="text-2xs text-slate-400 dark:text-zinc-500 font-mono">
+                        No stock data found for ticker: {researchResult.canonicalEntity.ticker}
+                      </div>
+                    )}
+                  </section>
+                )}
 
                 {/* Section B: Grid for growth and risk signals */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

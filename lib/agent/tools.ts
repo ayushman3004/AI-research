@@ -50,7 +50,7 @@ export async function searchWeb(query: string): Promise<ISearchResult[]> {
     }
 
     const model = new ChatGroq({
-      model: 'llama-3.1-8b-instant',
+      model: 'llama-3.3-70b-versatile',
       temperature: 0.7, // slightly higher temperature to get varied search contents
       apiKey: groqApiKey,
       maxRetries: 0,

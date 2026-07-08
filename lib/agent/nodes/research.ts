@@ -47,7 +47,12 @@ export async function researchFinancialsNode(state: AgentState) {
     return {};
   }
   const company = getSearchCompany(state);
-  const query = `"${company}" funding valuation OR revenue OR financial performance`;
+  const ticker = state.canonicalEntity?.ticker;
+  
+  // Use a targeted Yahoo Finance query to pull stock metrics and financial analysis
+  const query = ticker
+    ? `"${company}" "${ticker}" site:finance.yahoo.com OR "Yahoo Finance" stock analysis financials balance sheet valuation revenue P/E ratio`
+    : `"${company}" site:finance.yahoo.com OR "Yahoo Finance" stock analysis financials balance sheet valuation revenue P/E ratio`;
   console.log(`Running research_financials for: ${company}`);
 
   try {
