@@ -10,7 +10,7 @@ import { Shield, Sparkles, Database, Search, ArrowRight, X, Mail, Lock, AlertCir
 export default function Home() {
   const router = useRouter();
   const { user, token, loading, signInWithGoogle } = useAuth();
-  
+
   // Auth modal states
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [authMode, setAuthMode] = useState<'signin' | 'signup'>('signin');
@@ -86,7 +86,7 @@ export default function Home() {
 
   return (
     <div className="flex-1 flex flex-col bg-[#faf9f6] dark:bg-[#0f1115] text-[#1c1d1f] dark:text-[#eef1f5] transition-colors duration-300 min-h-screen selection:bg-slate-800 selection:text-white dark:selection:bg-zinc-200 dark:selection:text-black">
-      
+
       {/* Editorial Navigation */}
       <nav className="border-b border-slate-200/80 dark:border-zinc-800/80 px-6 py-5 bg-white/35 dark:bg-zinc-900/10 backdrop-blur-md sticky top-0 z-30">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
@@ -109,87 +109,123 @@ export default function Home() {
       </nav>
 
       {/* Main Container */}
-      <main className="flex-1 max-w-5xl mx-auto px-6 py-16 sm:py-24 flex flex-col items-center justify-center">
-        
-        {/* Title Tagline */}
-        <div className="text-center max-w-3xl mb-12">
-          <p className="text-2xs uppercase tracking-[0.3em] font-mono text-slate-500 dark:text-zinc-400 mb-4 animate-pulse">
-            Autonomous Financial Intelligence
-          </p>
-          <h1 className="font-serif text-4xl sm:text-6xl font-normal leading-[1.1] tracking-tight mb-8">
-            Decisions are hard.<br />
-            Our research is conclusive.
-          </h1>
-          <p className="font-sans text-base sm:text-lg leading-relaxed text-slate-600 dark:text-zinc-400 max-w-xl mx-auto mb-10">
-            Submit any company name. Aegis activates a multi-channel web research agent, evaluates industry trends, and returns a verified Invest or Pass verdict.
-          </p>
+      <main className="flex-1 flex flex-col">
 
-          <button
-            onClick={() => setIsAuthModalOpen(true)}
-            className="group px-6 py-4.5 bg-slate-900 text-white dark:bg-zinc-100 dark:text-slate-950 text-xs tracking-widest uppercase font-mono hover:scale-102 hover:shadow-lg dark:hover:shadow-zinc-950 transition-all duration-300 flex items-center gap-3 mx-auto cursor-pointer"
-          >
-            <span>Activate Analyst Terminal</span>
-            <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-          </button>
-        </div>
-
-        {/* Vintage Divider */}
-        <div className="w-full flex items-center justify-center gap-4 my-16">
-          <div className="h-px bg-slate-200 dark:bg-zinc-800 flex-1"></div>
-          <div className="text-3xs uppercase tracking-widest font-mono text-slate-400 dark:text-zinc-600">
-            Research Architecture
-          </div>
-          <div className="h-px bg-slate-200 dark:bg-zinc-800 flex-1"></div>
-        </div>
-
-        {/* How it works cards */}
-        <div className="w-full grid grid-cols-1 md:grid-cols-4 gap-6 mb-16">
-          
-          {/* Step 1 */}
-          <div className="bg-white dark:bg-zinc-900 border border-slate-200/80 dark:border-zinc-800/80 p-6 flex flex-col">
-            <div className="w-8 h-8 rounded-full bg-slate-100 dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 flex items-center justify-center font-mono text-xs font-semibold mb-6">
-              01
+        {/* Hero Section */}
+        <section className="relative overflow-hidden w-full min-h-[calc(100vh-140px)] flex flex-col justify-center">
+          {/* Dynamic Diagonal Stripe Background/Hero Graphic Element */}
+          <div className="absolute right-0 bottom-0 top-0 w-full md:w-1/2 overflow-hidden pointer-events-none z-0">
+            <div className="absolute -right-44 -bottom-96 w-[550px] h-[1450px] origin-bottom-right rotate-[35deg] flex shadow-2xl">
+              <div className="h-full bg-violet-600 dark:bg-violet-500" style={{ width: '40%' }} />
+              <div className="h-full bg-pink-500" style={{ width: '5%' }} />
+              <div className="h-full bg-rose-500" style={{ width: '3%' }} />
+              <div className="h-full bg-amber-500" style={{ width: '2.5%' }} />
+              <div className="h-full bg-yellow-400" style={{ width: '1.5%' }} />
+              <div className="h-full bg-slate-50/10 dark:bg-zinc-950/10" style={{ width: '48%' }} />
             </div>
-            <h3 className="font-serif font-medium text-base mb-2">Identify Entity</h3>
-            <p className="text-xs leading-relaxed text-slate-500 dark:text-zinc-400">
-              The agent resolves your query into its canonical legal entity, identifies its stock ticker, and locates its main web domain.
-            </p>
           </div>
 
-          {/* Step 2 */}
-          <div className="bg-white dark:bg-zinc-900 border border-slate-200/80 dark:border-zinc-800/80 p-6 flex flex-col">
-            <div className="w-8 h-8 rounded-full bg-slate-100 dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 flex items-center justify-center font-mono text-xs font-semibold mb-6">
-              02
+          <div className="max-w-5xl w-full mx-auto px-6 py-12 sm:py-20 z-10 grid grid-cols-1 md:grid-cols-12 gap-8 items-center">
+            {/* Left Column: Headline Copy & CTAs */}
+            <div className="md:col-span-8 lg:col-span-7 text-left flex flex-col gap-6">
+              <div>
+                <h1 className="font-serif text-4xl sm:text-5xl lg:text-6xl font-normal leading-[1.1] tracking-tight">
+                  Aegis activates a multi-channel web research agent
+                </h1>
+                <p className="font-sans text-sm sm:text-base leading-relaxed text-slate-600 dark:text-zinc-400 max-w-lg">
+                  Institutional-grade company research powered by autonomous AI agents. Analyze financials, competitive landscape, industry trends, and market sentiment to generate reliable investment insights in minutes.
+                </p>
+              </div>
+
+
+              <div className="flex flex-col sm:flex-row gap-3 pt-2">
+                <button
+                  onClick={() => setIsAuthModalOpen(true)}
+                  className="group px-6 py-3.5 bg-slate-900 text-white dark:bg-zinc-100 dark:text-slate-950 text-xs tracking-widest uppercase font-mono hover:scale-102 transition-all duration-300 flex items-center justify-center gap-3 cursor-pointer shadow-sm"
+                >
+                  <span>Get started &rarr;</span>
+                </button>
+
+                <button
+                  onClick={handleGoogleSignIn}
+                  className="flex items-center justify-center gap-3 px-5 py-3.5 bg-white dark:bg-zinc-900 border border-slate-300 dark:border-zinc-700 hover:bg-slate-50 dark:hover:bg-zinc-850 text-xs font-mono tracking-widest uppercase transition-all duration-300 shadow-sm cursor-pointer"
+                >
+                  {/* Google SVG */}
+                  <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none">
+                    <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+                    <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+                    <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" />
+                    <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" />
+                  </svg>
+                  <span>Sign up with Google</span>
+                </button>
+              </div>
             </div>
-            <h3 className="font-serif font-medium text-base mb-2">Parallel Search</h3>
-            <p className="text-xs leading-relaxed text-slate-500 dark:text-zinc-400">
-              Aegis launches five parallel streams scouring the web for news, revenues, financial performance, competitor share, risks, and leadership credibility.
-            </p>
-          </div>
 
-          {/* Step 3 */}
-          <div className="bg-white dark:bg-zinc-900 border border-slate-200/80 dark:border-zinc-800/80 p-6 flex flex-col">
-            <div className="w-8 h-8 rounded-full bg-slate-100 dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 flex items-center justify-center font-mono text-xs font-semibold mb-6">
-              03
+            {/* Right Column: Spacer to balance layout on desktop */}
+            <div className="hidden md:block md:col-span-4 lg:col-span-5" />
+          </div>
+        </section>
+
+        {/* Steps and Divider Container */}
+        <section className="max-w-5xl w-full mx-auto px-6 pb-20 relative z-10 bg-inherit">
+          {/* Vintage Divider */}
+          <div className="w-full flex items-center justify-center gap-4 my-16">
+            <div className="h-px bg-slate-200 dark:bg-zinc-800 flex-1"></div>
+            <div className="text-3xs uppercase tracking-widest font-mono text-slate-400 dark:text-zinc-650">
+              Research Architecture
             </div>
-            <h3 className="font-serif font-medium text-base mb-2">Synthesize Findings</h3>
-            <p className="text-xs leading-relaxed text-slate-500 dark:text-zinc-400">
-              Groq Llama 3.3 70B consolidates the unstructured inputs into structured findings outlining positive signals, red flags, moat details, and sources.
-            </p>
+            <div className="h-px bg-slate-200 dark:bg-zinc-800 flex-1"></div>
           </div>
 
-          {/* Step 4 */}
-          <div className="bg-white dark:bg-zinc-900 border border-slate-200/80 dark:border-zinc-800/80 p-6 flex flex-col">
-            <div className="w-8 h-8 rounded-full bg-slate-900 text-white dark:bg-zinc-100 dark:text-slate-950 border border-slate-200 dark:border-zinc-700 flex items-center justify-center font-mono text-xs font-semibold mb-6">
-              04
+          {/* How it works cards */}
+          <div className="w-full grid grid-cols-1 md:grid-cols-4 gap-6">
+
+            {/* Step 1 */}
+            <div className="bg-white dark:bg-zinc-900 border border-slate-200/80 dark:border-zinc-800/80 p-6 flex flex-col">
+              <div className="w-8 h-8 rounded-full bg-slate-100 dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 flex items-center justify-center font-mono text-xs font-semibold mb-6">
+                01
+              </div>
+              <h3 className="font-serif font-medium text-base mb-2">Identify Entity</h3>
+              <p className="text-xs leading-relaxed text-slate-500 dark:text-zinc-400">
+                The agent resolves your query into its canonical legal entity, identifies its stock ticker, and locates its main web domain.
+              </p>
             </div>
-            <h3 className="font-serif font-medium text-base mb-2">Deliver Verdict</h3>
-            <p className="text-xs leading-relaxed text-slate-500 dark:text-zinc-400">
-              Our investment framework compares risk and upside to stamp an Invest or Pass decision complete with bulleted rationales and confidence ratings.
-            </p>
-          </div>
 
-        </div>
+            {/* Step 2 */}
+            <div className="bg-white dark:bg-zinc-900 border border-slate-200/80 dark:border-zinc-800/80 p-6 flex flex-col">
+              <div className="w-8 h-8 rounded-full bg-slate-100 dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 flex items-center justify-center font-mono text-xs font-semibold mb-6">
+                02
+              </div>
+              <h3 className="font-serif font-medium text-base mb-2">Parallel Search</h3>
+              <p className="text-xs leading-relaxed text-slate-500 dark:text-zinc-400">
+                Aegis launches five parallel streams scouring the web for news, revenues, financial performance, competitor share, risks, and leadership credibility.
+              </p>
+            </div>
+
+            {/* Step 3 */}
+            <div className="bg-white dark:bg-zinc-900 border border-slate-200/80 dark:border-zinc-800/80 p-6 flex flex-col">
+              <div className="w-8 h-8 rounded-full bg-slate-100 dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 flex items-center justify-center font-mono text-xs font-semibold mb-6">
+                03
+              </div>
+              <h3 className="font-serif font-medium text-base mb-2">Synthesize Findings</h3>
+              <p className="text-xs leading-relaxed text-slate-500 dark:text-zinc-400">
+                Groq Llama 3.3 70B consolidates the unstructured inputs into structured findings outlining positive signals, red flags, moat details, and sources.
+              </p>
+            </div>
+
+            {/* Step 4 */}
+            <div className="bg-white dark:bg-zinc-900 border border-slate-200/80 dark:border-zinc-800/80 p-6 flex flex-col">
+              <div className="w-8 h-8 rounded-full bg-slate-900 text-white dark:bg-zinc-100 dark:text-slate-950 border border-slate-200 dark:border-zinc-700 flex items-center justify-center font-mono text-xs font-semibold mb-6">
+                04
+              </div>
+              <h3 className="font-serif font-medium text-base mb-2">Deliver Verdict</h3>
+              <p className="text-xs leading-relaxed text-slate-500 dark:text-zinc-400">
+                Our investment framework compares risk and upside to stamp an Invest or Pass decision complete with bulleted rationales and confidence ratings.
+              </p>
+            </div>
+          </div>
+        </section>
 
       </main>
 
@@ -210,7 +246,7 @@ export default function Home() {
       {isAuthModalOpen && (
         <div className="fixed inset-0 bg-slate-950/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-[#faf9f6] dark:bg-[#0f1115] border border-slate-350 dark:border-zinc-800 w-full max-w-md shadow-2xl relative transition-all animate-in fade-in zoom-in-95 duration-200">
-            
+
             {/* Close Button */}
             <button
               onClick={() => {
@@ -244,10 +280,10 @@ export default function Home() {
               >
                 {/* Google SVG */}
                 <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none">
-                  <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-                  <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-                  <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
-                  <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
+                  <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+                  <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+                  <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" />
+                  <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" />
                 </svg>
                 <span>Continue with Google</span>
               </button>
