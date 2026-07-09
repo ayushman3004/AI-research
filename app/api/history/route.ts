@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { adminAuth } from '@/lib/firebase/admin';
+import { getAdminAuth } from '@/lib/firebase/admin';
 import { dbConnect } from '@/lib/db/mongoose';
 
 export const dynamic = 'force-dynamic';
@@ -23,6 +23,7 @@ export async function GET(request: Request) {
   let userId: string;
 
   try {
+    const adminAuth = getAdminAuth();
     if (!adminAuth) {
       return NextResponse.json(
         { error: 'Firebase Admin credentials are not configured on the server.' },
@@ -102,6 +103,7 @@ export async function DELETE(request: Request) {
   let userId: string;
 
   try {
+    const adminAuth = getAdminAuth();
     if (!adminAuth) {
       return NextResponse.json(
         { error: 'Firebase Admin credentials are not configured.' },
