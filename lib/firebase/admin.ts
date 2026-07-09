@@ -7,6 +7,15 @@ const projectId = process.env.FIREBASE_ADMIN_PROJECT_ID;
 const clientEmail = process.env.FIREBASE_ADMIN_CLIENT_EMAIL;
 const privateKey = process.env.FIREBASE_ADMIN_PRIVATE_KEY;
 
+// Diagnostic log: always print which credentials are present on startup
+console.log('[firebase-admin] Credential check:', {
+  projectId: projectId ? '✓ set' : '✗ MISSING',
+  clientEmail: clientEmail ? '✓ set' : '✗ MISSING',
+  privateKey: privateKey
+    ? `✓ set (${privateKey.length} chars, starts: ${privateKey.slice(0, 27)})`
+    : '✗ MISSING',
+});
+
 let app: App | undefined;
 
 if (getApps().length === 0) {
