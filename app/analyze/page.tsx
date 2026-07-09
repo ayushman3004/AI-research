@@ -343,8 +343,18 @@ export default function AnalyzePage() {
       clearTimeout(timer4);
 
       if (!response.ok) {
-        const errData = await response.json();
-        throw new Error(errData.error || 'The research agent encountered a processing exception.');
+        let errorMessage = `Server error (${response.status}): The research agent encountered a processing exception.`;
+        try {
+          const errData = await response.json();
+          errorMessage = errData.error || errorMessage;
+        } catch {
+          // Response was not JSON — likely an HTML page from a proxy/firewall or a crashed server.
+          const text = await response.text().catch(() => '');
+          if (text.includes('DOCTYPE') || text.includes('<html')) {
+            errorMessage = `A network proxy or firewall (status ${response.status}) intercepted the request. Try switching networks or using a hotspot.`;
+          }
+        }
+        throw new Error(errorMessage);
       }
 
       const data: IResult = await response.json();
